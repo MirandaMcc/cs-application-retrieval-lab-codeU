@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.LinkedHashMap;
 
 import redis.clients.jedis.Jedis;
 
@@ -18,7 +19,8 @@ import redis.clients.jedis.Jedis;
  */
 public class WikiSearch {
 	
-	// map from URLs that contain the term(s) to relevance score
+	// map from URLs that contain the query term(s) to relevance score
+	//key = URL, val = relevance
 	private Map<String, Integer> map;
 
 	/**
@@ -61,7 +63,15 @@ public class WikiSearch {
 	 */
 	public WikiSearch or(WikiSearch that) {
         // FILL THIS IN!
-		return null;
+		Map<String,Integer> either = new HashMap<String,Integer>(map); //initialize w/ values for this's terms'
+		for (String word : that.map.keySet()){
+			int relav1 = this.getRelevance(word);
+			int relav2 = that.getRelevance(word);
+			int totalRel = totalRelevance(relav1, relav2);
+			either.put(word, totalRel); //replace value if shared or new, otherwise old value untouched
+		}
+
+		return new WikiSearch(either);
 	}
 	
 	/**
@@ -72,7 +82,17 @@ public class WikiSearch {
 	 */
 	public WikiSearch and(WikiSearch that) {
         // FILL THIS IN!
-		return null;
+		Map<String,Integer> both = new HashMap<String,Integer>(); //empty to start because shared terms unknown
+		for(String word: that.map.keySet()){
+			if(this.map.containsKey(word)){ //only add if mutual
+				int relav1 = this.getRelevance(word);
+				int relav2 = that.getRelevance(word);
+				int totalRel = totalRelevance(relav1, relav2);
+				both.put(word,totalRel);
+			}
+		}
+
+		return new WikiSearch(both);
 	}
 	
 	/**
@@ -83,7 +103,12 @@ public class WikiSearch {
 	 */
 	public WikiSearch minus(WikiSearch that) {
         // FILL THIS IN!
-		return null;
+		Map<String, Integer> exclusive = new HashMap<String, Integer>(map); //initialize to words in this 
+		for(String word: that.map.keySet()){
+			exclusive.remove(word); //remove terms that are mutual
+		}
+		
+		return new WikiSearch(exclusive);
 	}
 	
 	/**
@@ -105,7 +130,20 @@ public class WikiSearch {
 	 */
 	public List<Entry<String, Integer>> sort() {
         // FILL THIS IN!
-		return null;
+		//use original values in map
+		List<Entry<String, Integer>> list = new LinkedList<>(map.entrySet());
+
+		//use new comparator for in-place sort
+		Comparator comp = new Comparator<Entry<String, Integer>>()
+    		{
+        		public int compare( Entry<String, Integer> entry1,Entry<String, Integer> entry2 )
+        		{
+            		return ( entry1.getValue() ).compareTo( entry2.getValue() ); //compare relevance scores
+        		}
+    		}
+    	Collections.sort( list,  comp);
+
+    	return list;
 	}
 
 	/**
