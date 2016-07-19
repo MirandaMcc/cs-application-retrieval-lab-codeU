@@ -140,7 +140,7 @@ public class WikiSearch {
         		{
             		return ( entry1.getValue() ).compareTo( entry2.getValue() ); //compare relevance scores
         		}
-    		}
+    		};
     	Collections.sort( list,  comp);
 
     	return list;
